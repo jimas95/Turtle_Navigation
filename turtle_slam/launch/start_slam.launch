@@ -1,0 +1,16 @@
+
+<launch>
+
+<!-- open gazebo with house enviroment -->
+<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"></include> 
+<!-- move turtlebot with keyboard -->
+<include file="$(find turtlebot3_teleop)/launch/turtlebot3_teleop_key.launch"></include> 
+
+<!-- use gmapping SLAM -->
+<include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch">
+    <arg name="slam_methods" value="gmapping"/>
+</include> 
+
+<include file="$(find slam_toolbox)/online_sync.launch" if='$(arg sync)' />
+<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" />
+</launch>
