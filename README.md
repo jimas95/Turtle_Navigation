@@ -50,3 +50,27 @@ This launch file is uses amcl to localize your robot and the ROS navigation stac
 $ export TURTLEBOT3_MODEL=${BURGER}
 
 $ roslaunch turtle_slam nav_stack.launch gazebo:=True
+
+![](https://github.com/ME495-EmbeddedSystems/homework04-jimas95/blob/main/gif/Navigation.gif)
+
+### nav_stack
+This launch file is used for slaming, the difference compared to start_slam is that now we use 2D navigation goals from Rviz to move the turtle robot.
+
+1. from pkg turtlebot3_bringup the turtlebot3_remote.launch to upload the robot
+2. from pkg turtlebot3_gazebo the turtlebot3_house.launch in order to upload the house scene
+3. from pkg slam_toolbox the online_async.launch for SLAM 
+4. from pkg turtlebot3_navigation the move_base.launch for moving the robot with 2D navigation goals 
+5. from pkg rviz with configuration turtlebot3_navigation)/rviz/turtlebot3_navigation.rviz" for proper settings
+
+
+#### Arguments
+1. gazebo --> boolean, open gazebo and upload house enviroment, default FALSE
+
+
+#### Execute
+$ export TURTLEBOT3_MODEL=${BURGER}
+
+$  roslaunch turtle_slam slam_stack.launch gazebo:=True
+
+
+![](https://github.com/ME495-EmbeddedSystems/homework04-jimas95/blob/main/gif/SLAM.gif)
