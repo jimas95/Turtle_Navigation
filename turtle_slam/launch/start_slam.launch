@@ -1,16 +1,24 @@
 
 <launch>
+<arg name="gazebo" default='false'/>
+<arg name="SLAM" default='true'/>
+<arg name="gmapping" default='false'/>
 
 <!-- open gazebo with house enviroment -->
-<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"></include> 
+<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"  if='$(arg gazebo)'> </include> 
 <!-- move turtlebot with keyboard -->
 <include file="$(find turtlebot3_teleop)/launch/turtlebot3_teleop_key.launch"></include> 
 
 <!-- use gmapping SLAM -->
-<include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch">
+<include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch" if='$(arg gmapping)' >
     <arg name="slam_methods" value="gmapping"/>
 </include> 
 
-<include file="$(find slam_toolbox)/online_sync.launch" if='$(arg sync)' />
-<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" />
+<!-- use slam_toolbox SLAM -->
+<include file="$(find slam_toolbox)/online_async.launch" if='$(arg SLAM)'/>
+<include file="$(find slam_toolbox)/online_sync.launch" unless='$(arg SLAM)'/>
+
+<!-- use turtlebot3_navigation for localazation -->
+<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" ></include>
+
 </launch>
