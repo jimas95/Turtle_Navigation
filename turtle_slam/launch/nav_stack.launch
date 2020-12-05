@@ -1,0 +1,12 @@
+
+<launch>
+<arg name="gazebo" default='false'/>
+
+<!-- open gazebo with house enviroment -->
+<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"  if='$(arg gazebo)'> </include> 
+
+<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" >
+    <arg name="map_file" value="$(find turtle_slam)/maps/houseComplete_map.yaml" />
+</include>
+
+</launch>
