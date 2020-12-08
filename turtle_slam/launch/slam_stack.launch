@@ -6,8 +6,8 @@
 <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch" />
 
 <!-- open gazebo with house enviroment -->
-<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"  if='$(arg gazebo)'/>
-
+<!-- <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch"  if='$(arg gazebo)'/> -->
+<include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch"  if='$(arg gazebo)'/>
 <!-- use slam_toolbox SLAM -->
 <include file="$(find slam_toolbox)/online_async.launch" />
 
