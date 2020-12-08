@@ -58,30 +58,28 @@ class Explorer():
             rospy.logdebug(res)
             rospy.logdebug(goal_state)
 
-            self.counter +=1
+            self.counter +=10
             if(self.counter>16 or state==3):
                 rospy.logerr("Recalculate Frontriers ! ")
 
                 self.counter = 0
-                frontier_map = frontier(self.map,self.map_info,self.position)
-                pos = frontier_map.frontier_world
-                self.set_goal(pos)
-                # coord = self.from_coords_to_map()
-                # rospy.loginfo(coord)
-                # rospy.loginfo(self.position)
-                # temp = []
-                # for i in range(15):
-                #     makis = []
-                #     for j in range(15):
-                #         coords = (coord[0] + i-7,coord[1] + j-7)                        
-                #         makis.append(self.map[coords[0]][coords[1]])
-                #     temp.append(makis)
+                # frontier_map = frontier(self.map,self.map_info,self.position)
+                # pos = frontier_map.frontier_world
+                # self.set_goal(pos)
+                coord = self.from_coords_to_map()
+                rospy.loginfo(coord)
+                rospy.loginfo(self.position)
+                temp = []
+                for i in range(15):
+                    makis = []
+                    for j in range(15):
+                        coords = (coord[0] + i-7,coord[1] + j-7)                        
+                        makis.append(self.map[coords[0]][coords[1]])
+                    temp.append(makis)
         
-                # for i in range(14,-1,-1):
-                #     rospy.loginfo(temp[i])
-                # rospy.logerr("MAKIS")
-                # for i in range(self.map.shape[0]):
-                    # rospy.logerr(self.map[])
+                for i in range(14,-1,-1):
+                    rospy.loginfo(temp[i])
+                rospy.logerr("MAKIS")
 
             rate.sleep()
 
