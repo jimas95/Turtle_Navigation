@@ -111,33 +111,18 @@ class Explorer():
         msg type OccupancyGrid
         update map * save map
         """
-
-        # self.map =np.zeros([msg.info.height, msg.info.width])
-        # temp = np.array(msg.data).reshape((msg.info.height, msg.info.width))
-        # for i in range(msg.info.height):
-            # self.map[i] = temp[msg.info.height-i-1]
         self.map = np.array(msg.data).reshape((msg.info.height, msg.info.width))
         self.map_info = msg.info
 
-        # rospy.loginfo(data.info)
-        # rospy.loginfo(data.data)
 
     def feedback_callback(self,data):
+        """
+        Subscriber /move_base/feedback
+        Type MoveBaseAction
+        get the position of turtle from action feedback (This does sound like the correct way)
+        """
         self.position = data.feedback.base_position.pose
-        # euler_angles = self.get_rotation(self.position)
-        # rospy.logdebug(position)
-        # self.print_euler_angles(euler_angles)
 
-    def get_rotation(self,msg):
-        orientation_q = msg.orientation
-        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
-        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-        return (roll, pitch, yaw)
-
-    def print_euler_angles(self,angles):
-        rospy.logdebug("roll: " +str(angles[0]))
-        rospy.logdebug("pitch: "+str(angles[1]))
-        rospy.logdebug("yaw : "+str(angles[2]))
 
 
 
@@ -175,44 +160,34 @@ class frontier:
         rospy.logdebug("Robot       map   coords--> " +str(self.rob_pos[0]) + "  " +str(self.rob_pos[1]) )
         rospy.logdebug("Frontiers world   coords --> " +str(self.frontier_world))
         rospy.logdebug("Frontiers dist --> " +str(self.min_dist))
+        rospy.logdebug("Print my local map")
+        self.print_local_map()
 
-        temp = []
-        for i in range(15):
-            makis = []
-            for j in range(15):
-                coords = (self.rob_pos[0] + i-7,self.rob_pos[1] + j-7)
-                # rospy.logdebug(coords)
-                
+
+
+    def print_local_map(self):
+        """
+        print a small part of map with the robot in center of it
+        """
+        size = 15
+        size_half = int(size/2)
+        temp_map = []
+        for i in range(size):
+            map_row = []
+            for j in range(size):
+                coords = (self.rob_pos[0] + i-size_half,
+                          self.rob_pos[1] + j-size_half)      
+
                 if(self.check_limits(coords)):
-                    makis.append(self.map[coords[0]][coords[1]])
-                    # rospy.logerr(self.map[coords[0]][coords[1]])
-        # rospy.logerr(" ")
-            temp.append(makis)
+                    if self.rob_pos[0]==coords[0] and self.rob_pos[1]==coords[1]:
+                        map_row.append("R")
+                    else:
+                        map_row.append(self.map[coords[0]][coords[1]])
+            temp_map.append(map_row)
         
+        #print map upside down cause thats how its saved....
         for i in range(14,-1,-1):
-            rospy.logerr(temp[i])
-
-        # debug position 
-        # from world --> map --> world1 --> map1 --> world2 --> map2
-        world = turtle_pos
-        map_pos = self.world_to_map(world)
-        world1_pos = self.map_to_world(map_pos)
-        world1_pos_pose = Pose(Point(world1_pos[0],world1_pos[1],0),Quaternion(0,0,0,1))
-
-        map_pos1 = self.world_to_map(world1_pos_pose)
-        world2_pos = self.map_to_world(map_pos1)
-        world2_pos_pose = Pose(Point(world2_pos[0],world2_pos[1],0),Quaternion(0,0,0,1))
-        map_pos2 = self.world_to_map(world2_pos_pose)
-
-        rospy.logerr("world")
-        rospy.logerr(world)
-        rospy.logerr(map_pos)
-        rospy.logerr(world1_pos)
-        rospy.logerr(map_pos1)
-        rospy.logerr(world2_pos)
-        rospy.logerr(map_pos2)
-        rospy.logerr("world")
-
+            rospy.logdebug(temp_map[i])
 
     def is_frontier(self,frontier):
         """
