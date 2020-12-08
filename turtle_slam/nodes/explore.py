@@ -50,9 +50,6 @@ class Explorer():
             state = self.move_base.get_state()
             goal_state = self.move_base.get_goal_status_text()
 
-            
-            # if(state==3):
-            #     self.move_base.cancel_goal()
 
             rospy.logdebug(state)
             rospy.logdebug(res)
@@ -63,9 +60,9 @@ class Explorer():
                 rospy.logerr("Recalculate Frontriers ! ")
 
                 self.counter = 0
-                # frontier_map = frontier(self.map,self.map_info,self.position)
-                # pos = frontier_map.frontier_world
-                # self.set_goal(pos)
+                frontier_map = frontier(self.map,self.map_info,self.position)
+                pos = frontier_map.frontier_world
+                self.set_goal(pos)
                 coord = self.from_coords_to_map()
                 rospy.loginfo(coord)
                 rospy.loginfo(self.position)
@@ -192,8 +189,29 @@ class frontier:
         # rospy.logerr(" ")
             temp.append(makis)
         
-        for row in temp:
-            rospy.logerr(row)
+        for i in range(14,-1,-1):
+            rospy.logerr(temp[i])
+
+        # debug position 
+        # from world --> map --> world1 --> map1 --> world2 --> map2
+        world = turtle_pos
+        map_pos = self.world_to_map(world)
+        world1_pos = self.map_to_world(map_pos)
+        world1_pos_pose = Pose(Point(world1_pos[0],world1_pos[1],0),Quaternion(0,0,0,1))
+
+        map_pos1 = self.world_to_map(world1_pos_pose)
+        world2_pos = self.map_to_world(map_pos1)
+        world2_pos_pose = Pose(Point(world2_pos[0],world2_pos[1],0),Quaternion(0,0,0,1))
+        map_pos2 = self.world_to_map(world2_pos_pose)
+
+        rospy.logerr("world")
+        rospy.logerr(world)
+        rospy.logerr(map_pos)
+        rospy.logerr(world1_pos)
+        rospy.logerr(map_pos1)
+        rospy.logerr(world2_pos)
+        rospy.logerr(map_pos2)
+        rospy.logerr("world")
 
 
     def is_frontier(self,frontier):
@@ -240,8 +258,8 @@ class frontier:
         Input map_pos --> tuple(x,y)
         Return tuple(x,y)
         """
-        pos_x = map_pos[0]*self.map_info.resolution+self.map_info.origin.position.x
-        pos_y = map_pos[1]*self.map_info.resolution+self.map_info.origin.position.y
+        pos_x = map_pos[1]*self.map_info.resolution+self.map_info.origin.position.x
+        pos_y = map_pos[0]*self.map_info.resolution+self.map_info.origin.position.y
         return (pos_x,pos_y)
 
     def world_to_map(self,pos):
@@ -249,8 +267,8 @@ class frontier:
         given pos position calculate the position at map coordinates
         Input : pos --> Pose
         """
-        pos_center_map_x = pos.position.x-self.map_info.origin.position.x
-        pos_center_map_y = pos.position.y-self.map_info.origin.position.y
+        pos_center_map_x = pos.position.y-self.map_info.origin.position.y
+        pos_center_map_y = pos.position.x-self.map_info.origin.position.x
         pos_center_map_x = pos_center_map_x/self.map_info.resolution
         pos_center_map_y = pos_center_map_y/self.map_info.resolution
         pos_center_map_x = int(pos_center_map_x )
