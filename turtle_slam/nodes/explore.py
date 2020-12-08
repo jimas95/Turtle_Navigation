@@ -201,10 +201,11 @@ class frontier:
         wall = False
         unexplored = False
         available = False
-
-        for i in range(3):
-            for j in range(3):
-                coords = (frontier[0] + i-1,frontier[1] + j-1)
+        size = 5
+        size_half = int(size/2)
+        for i in range(size):
+            for j in range(size):
+                coords = (frontier[0] + i-size_half,frontier[1] + j-size_half)
                 if(self.check_limits(coords)):
                     if(self.map[coords[0]][coords[1]]==100): wall = True
                     if(self.map[coords[0]][coords[1]]==-1): unexplored = True
