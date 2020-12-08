@@ -7,6 +7,7 @@ import actionlib
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 import time
+from gazebo_msgs.srv import GetModelState
 """
 This node will navigate at our enviroment and explore it while creating a map of it 
 """
@@ -33,8 +34,11 @@ class Explorer():
         rospy.Subscriber('/move_base/feedback',MoveBaseAction,self.feedback_callback)
         rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
 
-
-
+        gms = rospy.ServiceProxy("/gazebo/get_model_state",GetModelState)
+        self.position = gms("turtlebot3_burger", "world").pose
+        rospy.logerr(self.position)
+        self.counter = 0
+        # self.set_goal((0,0))
         self.loop()
 
     def loop(self):
@@ -46,30 +50,38 @@ class Explorer():
             state = self.move_base.get_state()
             goal_state = self.move_base.get_goal_status_text()
 
-            if(state!=3):
-                rospy.logerr("WOW ! got something weird on state")
-                rospy.logerr(state)
+            
+            # if(state==3):
+            #     self.move_base.cancel_goal()
+
             rospy.logdebug(state)
             rospy.logdebug(res)
             rospy.logdebug(goal_state)
 
+            self.counter +=1
+            if(self.counter>16 or state==3):
+                rospy.logerr("Recalculate Frontriers ! ")
 
-
-            rospy.loginfo("map data")
-            
-            rospy.loginfo(self.map_info.resolution)
-            rospy.loginfo(self.map_info.width)
-            rospy.loginfo(self.map_info.height)
-            rospy.loginfo(self.map_info.origin)
-            rospy.loginfo(self.map_info.resolution*self.map_info.width)
-            rospy.loginfo(self.map_info.resolution*self.map_info.height)
-            rospy.loginfo(self.from_coords_to_map())
-            rospy.loginfo((self.position.position.x,self.position.position.y))
-            rospy.logerr(self.map.shape)
-            fro = frontier(self.map,self.map_info,self.position)
-
-            # for row in self.map:
-            #     rospy.loginfo(row)
+                self.counter = 0
+                frontier_map = frontier(self.map,self.map_info,self.position)
+                pos = frontier_map.frontier_world
+                self.set_goal(pos)
+                # coord = self.from_coords_to_map()
+                # rospy.loginfo(coord)
+                # rospy.loginfo(self.position)
+                # temp = []
+                # for i in range(15):
+                #     makis = []
+                #     for j in range(15):
+                #         coords = (coord[0] + i-7,coord[1] + j-7)                        
+                #         makis.append(self.map[coords[0]][coords[1]])
+                #     temp.append(makis)
+        
+                # for i in range(14,-1,-1):
+                #     rospy.loginfo(temp[i])
+                # rospy.logerr("MAKIS")
+                # for i in range(self.map.shape[0]):
+                    # rospy.logerr(self.map[])
 
             rate.sleep()
 
@@ -88,17 +100,14 @@ class Explorer():
         self.move_base.send_goal(goal)
 
 
-    def create_frontier(self):
-        rospy.logdebug("Recalculating Frontiers....")
-        
-        pass
+
 
     def from_coords_to_map(self):
         if(self.map_info.resolution==0):
             rospy.logerr("ERROR map resolution is ZERO")
             return(0,0)
-        return (int((self.position.position.x-self.map_info.origin.position.x)/self.map_info.resolution),
-                int((self.position.position.y-self.map_info.origin.position.y)/self.map_info.resolution))
+        return (int((self.position.position.y-self.map_info.origin.position.y)/self.map_info.resolution),
+                int((self.position.position.x-self.map_info.origin.position.x)/self.map_info.resolution))
 
 
     def map_callback(self,msg):
@@ -108,8 +117,13 @@ class Explorer():
         update map * save map
         """
 
+        # self.map =np.zeros([msg.info.height, msg.info.width])
+        # temp = np.array(msg.data).reshape((msg.info.height, msg.info.width))
+        # for i in range(msg.info.height):
+            # self.map[i] = temp[msg.info.height-i-1]
         self.map = np.array(msg.data).reshape((msg.info.height, msg.info.width))
         self.map_info = msg.info
+
         # rospy.loginfo(data.info)
         # rospy.loginfo(data.data)
 
@@ -134,16 +148,16 @@ class Explorer():
 
 class frontier:
 
-    def __init__(self,map,map_info,turtle_pos):
+    def __init__(self,mapp,map_info,turtle_pos):
         
         #save map info
         self.map_info = map_info
-        self.map = map
+        self.map = mapp
         #transform robot coord to map coordinates
         self.rob_pos = self.world_to_map(turtle_pos)
 
         #init nearest as the farthest point
-        self.nearest = (map_info.height,map_info.width)
+        self.nearest = (10000,10000)
         self.min_dist = abs(self.rob_pos[0]-self.nearest[0]) + abs(self.rob_pos[1]-self.nearest[1])
 
         #calculate all frontiers and find nearest
@@ -156,13 +170,32 @@ class frontier:
                     self.find_nearest_frontier(frontier)
         
         #find real world coordinates for neareste frontier
+        time = rospy.Time.now()
         self.frontier_world = self.map_to_world(self.nearest)
 
         rospy.logdebug("Frontiers Calculation DONE")
+        rospy.logdebug("Frontiers Calculation time --> " + str(rospy.Time.now()-time))
         rospy.logdebug("Frontiers found --> " +str(self.counter))
         rospy.logdebug("Frontiers nearest coords--> " +str(self.nearest[0]) + "  " +str(self.nearest[1]) )
-        rospy.logdebug("Frontiers woord   coords --> " +str(self.frontier_world))
+        rospy.logdebug("Robot       map   coords--> " +str(self.rob_pos[0]) + "  " +str(self.rob_pos[1]) )
+        rospy.logdebug("Frontiers world   coords --> " +str(self.frontier_world))
         rospy.logdebug("Frontiers dist --> " +str(self.min_dist))
+
+        temp = []
+        for i in range(15):
+            makis = []
+            for j in range(15):
+                coords = (self.rob_pos[0] + i-7,self.rob_pos[1] + j-7)
+                # rospy.logdebug(coords)
+                
+                if(self.check_limits(coords)):
+                    makis.append(self.map[coords[0]][coords[1]])
+                    # rospy.logerr(self.map[coords[0]][coords[1]])
+        # rospy.logerr(" ")
+            temp.append(makis)
+        
+        for row in temp:
+            rospy.logerr(row)
 
 
     def is_frontier(self,frontier):
@@ -173,25 +206,23 @@ class frontier:
         Return False if it is not Frontier
                True  if it is     Frontier
         """
-        if self.map[frontier[0]][frontier[1]] != -1 : return False
-        temp = (frontier[0]+1,frontier[1])
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0]+1,frontier[1]+1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0]+1,frontier[1]-1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0]-1,frontier[1])
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0]-1,frontier[1]+1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0]-1,frontier[1]-1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0],frontier[1]+1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        temp = (frontier[0],frontier[1]-1)
-        if self.check_limits(temp) and self.map[temp[0]][temp[1]]==0: return True
-        return False
 
+        wall = False
+        unexplored = False
+        available = False
+
+        for i in range(3):
+            for j in range(3):
+                coords = (frontier[0] + i-1,frontier[1] + j-1)
+                if(self.check_limits(coords)):
+                    if(self.map[coords[0]][coords[1]]==100): wall = True
+                    if(self.map[coords[0]][coords[1]]==-1): unexplored = True
+                    if(self.map[coords[0]][coords[1]]==0): available = True
+
+        if wall : return False
+        if not unexplored : return False
+        if not available : return False
+        return True
 
     def check_limits(self,frontier):
         """
