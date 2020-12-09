@@ -1,11 +1,12 @@
 
 
 <launch>
-<arg name="gazebo" default='false'/>
-
+<arg name="gazebo_world" default='false'/>
+<arg name="gazebo_house" default='false'/>
 
 <include file="$(find turtle_slam)/launch/slam_stack.launch"  >
-    <arg name="gazebo" value="$(arg gazebo)" />
+    <arg name="gazebo_world" value="$(arg gazebo_world)" />
+    <arg name="gazebo_house" value="$(arg gazebo_house)" />
 </include> 
 
 <!-- <node name="Explorer"  pkg="turtle_slam" type="explore.py" output="screen"/>  -->
