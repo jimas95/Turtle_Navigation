@@ -143,13 +143,23 @@ class frontier:
 
         #calculate all frontiers and find nearest
         self.counter = 0 
-        for i in range(self.map_info.height):
-            for j in range(self.map_info.width):
-                frontier = (i,j)
-                if(self.is_frontier(frontier)):
-                    self.counter+= 1
-                    self.find_nearest_frontier(frontier)
+        # for i in range(self.map_info.height):
+        #     for j in range(self.map_info.width):
+        #         frontier = (i,j)
+        #         if(self.is_frontier(frontier)):
+        #             self.counter+= 1
+        #             self.find_nearest_frontier(frontier)
         
+
+        result = np.where(self.map == -1)
+        listOfPossible_frontiers= list(zip(result[0], result[1]))
+        for frontier in listOfPossible_frontiers:
+            if(self.is_frontier(frontier)):
+                self.counter+= 1
+                self.find_nearest_frontier(frontier)                    
+
+
+
         #find real world coordinates for neareste frontier
         time = rospy.get_time()
         self.frontier_world = self.map_to_world(self.nearest)
