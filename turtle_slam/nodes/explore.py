@@ -29,33 +29,22 @@ class Explorer():
         rospy.logdebug("okei got that!") 
 
 
-
-
-        #subscibers 
-        rospy.Subscriber('/move_base/feedback',MoveBaseAction,self.feedback_callback)
-        rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
-
         # services
-        get_map = rospy.ServiceProxy("/slam_toolbox/dynamic_map",GetMap)
-        gms = rospy.ServiceProxy("/gazebo/get_model_state",GetModelState)
+        self.get_map = rospy.ServiceProxy("/slam_toolbox/dynamic_map",GetMap)
         
-        #init turtle position from gazebo
-        self.position = gms("turtlebot3_burger", "world").pose
+        #init turtle position
+        self.position = (0,0)
 
         # init map
         self.map = np.array([])
         self.map_info = OccupancyGrid().info
-        self.map_callback(get_map().map)
 
-        # set first goal
-        frontier_map = frontier(self.map,self.map_info,self.position)
-        pos = frontier_map.frontier_world
-        self.set_goal(pos)
-
+        #create buffer for tf transforms
         self.buffer = tf2_ros.Buffer()
-        self.listener = tf2_ros.TransformListener(self.buffer)
+        listener = tf2_ros.TransformListener(self.buffer)
 
-
+        #first update
+        self.update()
 
         self.counter = 0
         self.loop()
@@ -63,7 +52,6 @@ class Explorer():
 
     def loop(self):
 
-        # self.move_base.cancel_goals_at_and_before_time()
         while not rospy.is_shutdown():
 
             rospy.logdebug("Loop")
@@ -81,19 +69,31 @@ class Explorer():
                 rospy.logerr("Recalculate Frontriers ! ")
 
                 self.counter = 0
-                frontier_map = frontier(self.map,self.map_info,self.position)
-                pos = frontier_map.frontier_world
-                self.set_goal(pos)
+                self.update()
+                # frontier_map = frontier(self.map,self.map_info,self.position)
+                # pos = frontier_map.frontier_world
+                # self.set_goal(pos)
 
-                # coord = self.from_coords_to_map()
-                # rospy.loginfo("Robot position to man and world")
-                # rospy.loginfo(coord)
-                # rospy.loginfo(self.position)
 
 
             rate.sleep()
 
 
+    def update(self):
+
+        #update position
+        trans = self.buffer.lookup_transform("map", "base_footprint", rospy.Time(),rospy.Duration(1))
+        self.position = (trans.transform.translation.x,trans.transform.translation.y)
+        #update map
+        
+        #update map
+        self.map_callback(self.get_map().map)
+
+        #update forntiers
+        frontier_map = frontier(self.map,self.map_info,self.position)
+        pos = frontier_map.frontier_world
+        #set goal
+        self.set_goal(pos)
 
     def set_goal(self,pos):
         """
@@ -109,15 +109,6 @@ class Explorer():
 
 
 
-
-    def from_coords_to_map(self):
-        if(self.map_info.resolution==0):
-            rospy.logerr("ERROR map resolution is ZERO")
-            return(0,0)
-        return (int((self.position.position.y-self.map_info.origin.position.y)/self.map_info.resolution),
-                int((self.position.position.x-self.map_info.origin.position.x)/self.map_info.resolution))
-
-
     def map_callback(self,msg):
         """
         map Topic Sercice 
@@ -128,13 +119,6 @@ class Explorer():
         self.map_info = msg.info
 
 
-    def feedback_callback(self,data):
-        """
-        Subscriber /move_base/feedback
-        Type MoveBaseAction
-        get the position of turtle from action feedback (This does sound like the correct way)
-        """
-        self.position = data.feedback.base_position.pose
 
 
 
@@ -163,15 +147,15 @@ class frontier:
                     self.find_nearest_frontier(frontier)
         
         #find real world coordinates for neareste frontier
-        time = rospy.Time.now()
+        time = rospy.get_time()
         self.frontier_world = self.map_to_world(self.nearest)
 
         rospy.logdebug("Frontiers Calculation DONE")
-        rospy.logdebug("Frontiers Calculation time --> " + str(rospy.Time.now()-time))
+        rospy.logdebug("Frontiers Calculation time --> " + str(rospy.get_time()-time))
         rospy.logdebug("Frontiers found --> " +str(self.counter))
-        rospy.logdebug("Frontiers nearest coords--> " +str(self.nearest[0]) + "  " +str(self.nearest[1]) )
         rospy.logdebug("Robot       map   coords--> " +str(self.rob_pos[0]) + "  " +str(self.rob_pos[1]) )
-        rospy.logdebug("Frontiers world   coords --> " +str(self.frontier_world))
+        rospy.logdebug("Frontiers   goal  coords--> " +str(self.nearest[0]) + "  " +str(self.nearest[1]) )
+        rospy.logdebug("Frontiers   goal  coords --> " +str(self.frontier_world))
         rospy.logdebug("Frontiers dist --> " +str(self.min_dist))
         rospy.logdebug("Print my local map")
         self.print_local_map()
@@ -214,7 +198,7 @@ class frontier:
         wall = False
         unexplored = False
         available = False
-        size = 3
+        size = 10
         size_half = int(size/2)
         for i in range(size):
             for j in range(size):
@@ -254,10 +238,10 @@ class frontier:
     def world_to_map(self,pos):
         """
         given pos position calculate the position at map coordinates
-        Input : pos --> Pose
+        Input : pos --> tuple(x,y)
         """
-        pos_center_map_x = pos.position.y-self.map_info.origin.position.y
-        pos_center_map_y = pos.position.x-self.map_info.origin.position.x
+        pos_center_map_x = pos[1]-self.map_info.origin.position.y
+        pos_center_map_y = pos[0]-self.map_info.origin.position.x
         pos_center_map_x = pos_center_map_x/self.map_info.resolution
         pos_center_map_y = pos_center_map_y/self.map_info.resolution
         pos_center_map_x = int(pos_center_map_x )
