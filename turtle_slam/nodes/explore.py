@@ -51,14 +51,17 @@ class Explorer():
         
 
     def loop(self):
-
+        """
+        main loop iterates every 1 sec 
+        every 6 secs or if movement has been completed we recalculate new frontiers and set new goal
+        """
         while not rospy.is_shutdown():
 
             rospy.logdebug("Loop")
             state = self.move_base.get_state()
 
             self.counter +=1
-            if(self.counter>15 or state==3):
+            if(self.counter>6 or state==3):
                 rospy.logdebug("-------------------------")
                 rospy.logdebug("Recalculate Frontriers ! ")
                 rospy.logdebug("-------------------------")
@@ -81,7 +84,9 @@ class Explorer():
 
 
     def update(self):
-
+        """
+        main update of loop
+        """
         #update position
         trans = self.buffer.lookup_transform("map", "base_footprint", rospy.Time(),rospy.Duration(1))
         self.position = (trans.transform.translation.x,trans.transform.translation.y)
@@ -115,7 +120,7 @@ class Explorer():
 
     def map_callback(self,msg):
         """
-        map Topic Sercice 
+        Updates our map
         msg type OccupancyGrid
         update map * save map
         """
@@ -131,6 +136,8 @@ class frontier:
 
     def __init__(self,mapp,map_info,turtle_pos):
         
+        #keep track of time execution
+        time = rospy.get_time()
         #save map info
         self.map_info = map_info
         self.map = mapp
@@ -143,29 +150,19 @@ class frontier:
 
         #calculate all frontiers and find nearest
         self.counter = 0 
-        # for i in range(self.map_info.height):
-        #     for j in range(self.map_info.width):
-        #         frontier = (i,j)
-        #         if(self.is_frontier(frontier)):
-        #             self.counter+= 1
-        #             self.find_nearest_frontier(frontier)
-        
-
-        result = np.where(self.map == -1)
-        listOfPossible_frontiers= list(zip(result[0], result[1]))
-        for frontier in listOfPossible_frontiers:
-            if(self.is_frontier(frontier)):
-                self.counter+= 1
-                self.find_nearest_frontier(frontier)                    
-
+        #find all possible frontiers                  
+        for i in range(self.map_info.height):
+            for j in range(self.map_info.width):
+                frontier = (i,j)
+                if(self.is_frontier(frontier)):
+                    self.counter+= 1
+                    self.find_nearest_frontier(frontier)
 
 
         #find real world coordinates for neareste frontier
-        time = rospy.get_time()
         self.frontier_world = self.map_to_world(self.nearest)
-
         rospy.logdebug("Frontiers Calculation DONE")
-        rospy.logdebug("Frontiers Calculation time --> " + str(rospy.get_time()-time))
+        rospy.loginfo("Frontiers Calculation time --> " + str(rospy.get_time()-time))
         rospy.logdebug("Frontiers found --> " +str(self.counter))
         rospy.logdebug("Robot       map   coords--> " +str(self.rob_pos[0]) + "  " +str(self.rob_pos[1]) )
         rospy.logdebug("Frontiers   goal  coords--> " +str(self.nearest[0]) + "  " +str(self.nearest[1]) )
@@ -214,6 +211,7 @@ class frontier:
         available = False
         size = 10
         size_half = int(size/2)
+        if self.map[frontier[0]][frontier[1]]!=-1: return False
         for i in range(size):
             for j in range(size):
                 coords = (frontier[0] + i-size_half,frontier[1] + j-size_half)
@@ -280,6 +278,7 @@ Start everyting
 if __name__ == '__main__':
     try:
         rospy.init_node('Explorer', log_level=1)
+        # rospy.init_node('Explorer')
         rate = rospy.Rate(1) # publish freacuancy (DO NOT Change)
         explore  = Explorer()
     except rospy.ROSInterruptException:
