@@ -9,6 +9,8 @@ import numpy as np
 import time
 from gazebo_msgs.srv import GetModelState
 from nav_msgs.srv import GetMap
+import tf2_ros
+
 """
 This node will navigate at our enviroment and explore it while creating a map of it 
 """
@@ -39,7 +41,6 @@ class Explorer():
         
         #init turtle position from gazebo
         self.position = gms("turtlebot3_burger", "world").pose
-        rospy.logerr(self.position)
 
         # init map
         self.map = np.array([])
@@ -51,7 +52,11 @@ class Explorer():
         pos = frontier_map.frontier_world
         self.set_goal(pos)
 
-        
+        self.buffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.buffer)
+
+
+
         self.counter = 0
         self.loop()
         
@@ -209,7 +214,7 @@ class frontier:
         wall = False
         unexplored = False
         available = False
-        size = 11
+        size = 3
         size_half = int(size/2)
         for i in range(size):
             for j in range(size):
@@ -267,7 +272,7 @@ class frontier:
         """
         #calculate manhatan distance 
         dist = abs(self.rob_pos[0]-frontier[0]) + abs(self.rob_pos[1]-frontier[1])
-        if dist < self.min_dist:
+        if dist < self.min_dist and 15 < self.min_dist:
             self.min_dist = dist
             self.nearest = frontier
     
