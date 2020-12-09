@@ -8,6 +8,7 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 import time
 from gazebo_msgs.srv import GetModelState
+from nav_msgs.srv import GetMap
 """
 This node will navigate at our enviroment and explore it while creating a map of it 
 """
@@ -26,25 +27,40 @@ class Explorer():
         rospy.logdebug("okei got that!") 
 
 
-        self.map = np.array([])
-        self.map_info = OccupancyGrid().info
 
 
         #subscibers 
         rospy.Subscriber('/move_base/feedback',MoveBaseAction,self.feedback_callback)
         rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
 
+        # services
+        get_map = rospy.ServiceProxy("/slam_toolbox/dynamic_map",GetMap)
         gms = rospy.ServiceProxy("/gazebo/get_model_state",GetModelState)
+        
+        #init turtle position from gazebo
         self.position = gms("turtlebot3_burger", "world").pose
         rospy.logerr(self.position)
+
+        # init map
+        self.map = np.array([])
+        self.map_info = OccupancyGrid().info
+        self.map_callback(get_map().map)
+
+        # set first goal
+        frontier_map = frontier(self.map,self.map_info,self.position)
+        pos = frontier_map.frontier_world
+        self.set_goal(pos)
+
+        
         self.counter = 0
-        # self.set_goal((0,0))
         self.loop()
+        
 
     def loop(self):
 
         # self.move_base.cancel_goals_at_and_before_time()
         while not rospy.is_shutdown():
+
             rospy.logdebug("Loop")
             res = self.move_base.get_result()
             state = self.move_base.get_state()
@@ -55,28 +71,20 @@ class Explorer():
             rospy.logdebug(res)
             rospy.logdebug(goal_state)
 
-            self.counter +=10
-            if(self.counter>16 or state==3):
+            self.counter +=1
+            if(self.counter>10 or state==3):
                 rospy.logerr("Recalculate Frontriers ! ")
 
                 self.counter = 0
                 frontier_map = frontier(self.map,self.map_info,self.position)
                 pos = frontier_map.frontier_world
                 self.set_goal(pos)
-                coord = self.from_coords_to_map()
-                rospy.loginfo(coord)
-                rospy.loginfo(self.position)
-                temp = []
-                for i in range(15):
-                    makis = []
-                    for j in range(15):
-                        coords = (coord[0] + i-7,coord[1] + j-7)                        
-                        makis.append(self.map[coords[0]][coords[1]])
-                    temp.append(makis)
-        
-                for i in range(14,-1,-1):
-                    rospy.loginfo(temp[i])
-                rospy.logerr("MAKIS")
+
+                # coord = self.from_coords_to_map()
+                # rospy.loginfo("Robot position to man and world")
+                # rospy.loginfo(coord)
+                # rospy.loginfo(self.position)
+
 
             rate.sleep()
 
@@ -201,7 +209,7 @@ class frontier:
         wall = False
         unexplored = False
         available = False
-        size = 5
+        size = 11
         size_half = int(size/2)
         for i in range(size):
             for j in range(size):
