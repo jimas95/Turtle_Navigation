@@ -55,24 +55,25 @@ class Explorer():
         while not rospy.is_shutdown():
 
             rospy.logdebug("Loop")
-            res = self.move_base.get_result()
             state = self.move_base.get_state()
-            goal_state = self.move_base.get_goal_status_text()
-
-
-            rospy.logdebug(state)
-            rospy.logdebug(res)
-            rospy.logdebug(goal_state)
 
             self.counter +=1
-            if(self.counter>10 or state==3):
-                rospy.logerr("Recalculate Frontriers ! ")
+            if(self.counter>15 or state==3):
+                rospy.logdebug("-------------------------")
+                rospy.logdebug("Recalculate Frontriers ! ")
+                rospy.logdebug("-------------------------")
 
                 self.counter = 0
-                self.update()
-                # frontier_map = frontier(self.map,self.map_info,self.position)
-                # pos = frontier_map.frontier_world
-                # self.set_goal(pos)
+                frontiers_num = self.update()
+
+                #break condition
+                if frontiers_num==0 :
+                    rospy.logdebug("---------------------------------------")
+                    rospy.logdebug("---------------------------------------")
+                    rospy.logdebug("NO FRONTIERS FOUND EXPLORATION COMPLETE")
+                    rospy.logdebug("---------------------------------------")
+                    rospy.logdebug("---------------------------------------")
+                    break
 
 
 
@@ -94,6 +95,9 @@ class Explorer():
         pos = frontier_map.frontier_world
         #set goal
         self.set_goal(pos)
+
+        #check if there are any frontiers left
+        return frontier_map.counter
 
     def set_goal(self,pos):
         """
