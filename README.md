@@ -28,14 +28,14 @@ This launch file is executing SLAM algorithm in order to map the enviroment and 
 3. gmapping boolean, use gmapping for SLAM, default False
 
 #### Execute
-$ export TURTLEBOT3_MODEL=${BURGER}
+`$ export TURTLEBOT3_MODEL=${BURGER}`
 
-$ roslaunch turtle_slam start_slam.launch gazebo:=True
+`$ roslaunch turtle_slam start_slam.launch gazebo:=True`
 
 If you want to save your map:
-$ rosrun map_server map_saver -f <map_name>
+`$ rosrun map_server map_saver -f <map_name>`
 
-
+rosrun map_server map_saver -f realHOUSE
 
 ### nav_stack
 This launch file is uses amcl to localize your robot and the ROS navigation stack to allow the robot to move using the map. You can move the robot by setting 2D navigation goals in Rviz.
@@ -53,7 +53,7 @@ $ roslaunch turtle_slam nav_stack.launch gazebo:=True
 
 ![](https://github.com/ME495-EmbeddedSystems/homework04-jimas95/blob/main/gif/Navigation.gif)
 
-### nav_stack
+### slam_stack
 This launch file is used for slaming, the difference compared to start_slam is that now we use 2D navigation goals from Rviz to move the turtle robot.
 
 1. from pkg turtlebot3_bringup the turtlebot3_remote.launch to upload the robot
@@ -64,13 +64,28 @@ This launch file is used for slaming, the difference compared to start_slam is t
 
 
 #### Arguments
-1. gazebo --> boolean, open gazebo and upload house enviroment, default FALSE
+1. gazebo_world --> boolean, open gazebo and upload house enviroment, default FALSE
+2. gazebo_house --> boolean, open gazebo and upload world enviroment, default FALSE
 
 
 #### Execute
-$ export TURTLEBOT3_MODEL=${BURGER}
+`$ export TURTLEBOT3_MODEL=${BURGER}`
 
-$  roslaunch turtle_slam slam_stack.launch gazebo:=True
+`$  roslaunch turtle_slam slam_stack.launch gazebo:=True`
 
 
 ![](https://github.com/ME495-EmbeddedSystems/homework04-jimas95/blob/main/gif/SLAM.gif)
+
+
+
+
+### explore
+This launch file utilizes the slam_stack.launch and has the same input arguments with it. The difference now is that we are using a node named `explore.pi` where we implement the frontier method, 
+#### Arguments
+#### Execute
+
+1. using gazebo
+
+2. real robot
+
+
