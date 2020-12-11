@@ -209,7 +209,7 @@ class frontier:
         wall = False
         unexplored = False
         available = False
-        size = 10
+        size = 7
         size_half = int(size/2)
         if self.map[frontier[0]][frontier[1]]!=-1: return False
         for i in range(size):
