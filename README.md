@@ -80,12 +80,22 @@ This launch file is used for slaming, the difference compared to start_slam is t
 
 
 ### explore
-This launch file utilizes the slam_stack.launch and has the same input arguments with it. The difference now is that we are using a node named `explore.pi` where we implement the frontier method, 
+This launch file is able to autonoms navigate and explore at an unknown enviroment using SLAM and the frontier method. It utilizes the `slam_stack.launch` and has the same input arguments with it. The difference now is that we are using a node named `explore.pi` where we implement the frontier method. The robot might "stack" some times but using the 2D navigation goals we are able to easyly help him get back on his corse. The node will end when all the enviroment has been explored
 #### Arguments
 #### Execute
 
 1. using gazebo
+    `roslaunch turtle_slam explore.launch gazebo_house:=True`
+2. real TurtleBot
 
-2. real robot
+1. `Open new Terminal`
+1. `roscore`
+1. `Open new Terminal`
+2. `ssh ubuntu@turtlebot.local`
+3. `cd ws/`
+4. `source devel/setup.bash `
+5. `roslaunch turtlebot3_bringup turtlebot3_robot.launch`
 
-
+6. `Open new Terminal`
+7. `ssh ubuntu@turtlebot.local sudo date -s @`(date -u +"%s" )` `
+8. `roslaunch turtle_slam explore.launch `
