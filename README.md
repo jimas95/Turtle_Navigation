@@ -8,8 +8,8 @@ The goal is to use the turtlebot to map an environment and then navigate within 
 ## launch files
 
 ### start_slam
-This launch file is executing SLAM algorithm in order to map the enviroment and then save it. In more detail we are using 
-1. from pkg turtlebot3_gazebo the turtlebot3_house.launch enviroment.
+This launch file is executing SLAM algorithm in order to map the environment and then save it. In more detail we are using 
+1. from pkg turtlebot3_gazebo the turtlebot3_house.launch environment.
 2. from pkg turtlebot3_teleop the turtlebot3_teleop_key.launch in order to move the robot.
     Use wasdx for moving.
     1. w --> increase forward linear speed
@@ -23,7 +23,7 @@ This launch file is executing SLAM algorithm in order to map the enviroment and 
 6. from pkg turtlebot3_navigation turtlebot3_navigation.launch
 
 #### Arguments
-1. gazebo --> boolean, open gazebo and upload house enviroment, default FALSE
+1. gazebo --> boolean, open gazebo and upload house environment, default FALSE
 2. SLAM --> boolean, use synchronous/asynchronous SLAMING, default True
 3. gmapping boolean, use gmapping for SLAM, default False
 
@@ -38,12 +38,12 @@ If you want to save your map:
 rosrun map_server map_saver -f realHOUSE
 
 ### nav_stack
-This launch file is uses amcl to localize your robot and the ROS navigation stack to allow the robot to move using the map. You can move the robot by setting 2D navigation goals in Rviz.
-1. from pkg turtlebot3_gazebo the turtlebot3_house.launch enviroment.
+This launch file uses amcl to localize your robot and the ROS navigation stack to allow the robot to move using the map. You can move the robot by setting 2D navigation goals in Rviz.
+1. from pkg turtlebot3_gazebo the turtlebot3_house.launch environment.
 2. from pkg turtlebot3_navigation turtlebot3_navigation.launch and upload the map of the house(maps/map.yaml)
 
 #### Arguments
-1. gazebo --> boolean, open gazebo and upload house enviroment, default FALSE
+1. gazebo --> boolean, open gazebo and upload house environment, default FALSE
 
 
 #### Execute
@@ -64,8 +64,8 @@ This launch file is used for slaming, the difference compared to start_slam is t
 
 
 #### Arguments
-1. gazebo_world --> boolean, open gazebo and upload house enviroment, default FALSE
-2. gazebo_house --> boolean, open gazebo and upload world enviroment, default FALSE
+1. gazebo_world --> boolean, open gazebo and upload house environment, default FALSE
+2. gazebo_house --> boolean, open gazebo and upload world environment, default FALSE
 
 
 #### Execute
@@ -80,10 +80,10 @@ This launch file is used for slaming, the difference compared to start_slam is t
 
 
 ### explore
-This launch file is able to autonoms navigate and explore at an unknown enviroment using SLAM and the frontier method. It utilizes the `slam_stack.launch` and has the same input arguments with it. The difference now is that we are using a node named `explore.pi` where we implement the frontier method. The robot might "stack" some times but using the 2D navigation goals we are able to easyly help him get back on his corse. The node will end when all the enviroment has been explored
+This launch file is able to autonoms navigate and explore at an unknown environment using SLAM and the frontier method. It utilizes the `slam_stack.launch` and has the same input arguments with it. The difference now is that we are using a node named `explore.pi` where we implement the frontier method. The robot might "stack" some times but using the 2D navigation goals we are able to easily help him get back on his corse. The node will end when all the environment has been explored
 #### Arguments
-1. gazebo_world --> boolean, open gazebo and upload house enviroment, default FALSE
-2. gazebo_house --> boolean, open gazebo and upload world enviroment, default FALSE
+1. gazebo_world --> boolean, open gazebo and upload house environment, default FALSE
+2. gazebo_house --> boolean, open gazebo and upload world environment, default FALSE
 
 
 #### Execute
