@@ -103,3 +103,7 @@ This launch file is able to autonoms navigate and explore at an unknown environm
 8. `Open new Terminal`
 9. `ssh ubuntu@turtlebot.local sudo date -s @`(date -u +"%s" )` `
 10. `roslaunch turtle_slam explore.launch `
+
+
+
+![](https://github.com/jimas95/homework04-jimas95/blob/main/gif/auto_explore.gif)
